@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - '27017:27017'
+    networks:
+      - my_network
+    volumes:
+      - mongodb_data:/data/db
+
+  mongodb_test:
+    image: mongo
+    container_name: mongodb_test
+    restart: always
+    ports:
+      - '27018:27017'
+    networks:
+      - my_network
+    volumes:
+      - mongodb_test_data:/data/db
+
+  app:
+    build: .
+    container_name: nestjs_app
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
+    networks:
+      - my_network
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=${NODE_ENV:-} # Không set mặc định, chỉ nhận nếu truyền vào
+
+  test_runner:
+    build: .
+    container_name: nestjs_test
+    depends_on:
+      - mongodb_test
+    env_file:
+      - .env.test
+    networks:
+      - my_network
+    environment:
+      - NODE_ENV=${NODE_ENV:-} # Không set mặc định, chỉ nhận nếu truyền vào
+    command: sh -c "npm run test || true && tail -f /dev/null"
+
+    stdin_open: true # Giữ container mở
+    tty: true
+
+volumes:
+  mongodb_data:
+  mongodb_test_data:
+
+networks:
+  my_network:
