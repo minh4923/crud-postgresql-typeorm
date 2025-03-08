@@ -1,13 +1,14 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm'; // Import TypeOrmModule
 import { validateEnv } from './config/env.validation';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PostModule } from './modules/post/post.module';
 import jwtConfig from './config/jwt.config';
 import { JwtMiddleware } from './modules/auth/middleware/jwt.middleware';
-console.log(' AppModule is loading jwtConfig:', jwtConfig);
+import { databaseConfig } from './config/database.config';
+console.log('AppModule is loading jwtConfig:', jwtConfig);
 
 @Module({
   imports: [
@@ -18,12 +19,11 @@ console.log(' AppModule is loading jwtConfig:', jwtConfig);
       load: [jwtConfig],
     }),
 
-    MongooseModule.forRootAsync({
+    // Cập nhật TypeORM cho PostgreSQL
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
+      useFactory: databaseConfig
     }),
 
     UserModule,
@@ -33,6 +33,6 @@ console.log(' AppModule is loading jwtConfig:', jwtConfig);
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).forRoutes('*');
+    consumer.apply(JwtMiddleware).forRoutes('*'); // Áp dụng JWT middleware
   }
 }

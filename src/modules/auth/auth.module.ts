@@ -5,14 +5,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import jwtConfig from '../../config/jwt.config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema, User } from '../user/schemas/user.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../user/entities/user.entity';
 import { UserRepository } from '../user/repositories/user.repository';
-import { config } from 'dotenv';
+
 @Module({
   imports: [
     ConfigModule.forFeature(jwtConfig),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    TypeOrmModule.forFeature([User]), 
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
       inject: [jwtConfig.KEY],

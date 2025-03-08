@@ -1,7 +1,6 @@
 import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-
 class EnvConfig {
   @IsNumber()
   @IsNotEmpty()
@@ -9,7 +8,23 @@ class EnvConfig {
 
   @IsString()
   @IsNotEmpty()
-  MONGODB_URI: string;
+  DATABASE_HOST: string; // Sử dụng DATABASE_HOST cho PostgreSQL
+
+  @IsNumber()
+  @IsNotEmpty()
+  DATABASE_PORT: number; // Cổng cho PostgreSQL
+
+  @IsString()
+  @IsNotEmpty()
+  DATABASE_USER: string; // Tên người dùng cho PostgreSQL
+
+  @IsString()
+  @IsNotEmpty()
+  DATABASE_PASSWORD: string; // Mật khẩu cho PostgreSQL
+
+  @IsString()
+  @IsNotEmpty()
+  DATABASE_NAME: string; // Tên cơ sở dữ liệu cho PostgreSQL
 
   @IsNotEmpty()
   @IsString()

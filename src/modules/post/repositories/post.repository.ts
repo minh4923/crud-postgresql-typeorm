@@ -1,22 +1,37 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
-import { AuthGuard } from '@nestjs/passport';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Post } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
-import { PostDocument, Post } from '../schemas/post.schema';
+import { UserRepository } from '../../user/repositories/user.repository'; 
+
 @Injectable()
 export class PostRepository {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+  constructor(
+    @InjectRepository(Post)
+    private postRepository: Repository<Post>,
+    private userRepository: UserRepository 
+  ) {}
 
-  async createPost(data: CreatePostDto, userId: string): Promise<PostDocument> {
-    const newPost = new this.postModel({ ...data, author: userId });
-    return newPost.save();
+  
+  async createPost(data: CreatePostDto, userId: number): Promise<Post> {
+    const user = await this.userRepository.getUserById(userId); 
+    if (!user) {
+      throw new Error(`User with id ${userId} not found`);
+    }
+    const newPost = this.postRepository.create({
+      ...data,
+      author: user, 
+    });
+    return this.postRepository.save(newPost); 
   }
 
   async getAllPost(skip: number, limit: number) {
-    const posts = await this.postModel.find().skip(skip).limit(limit).exec();
-    const total = await this.postModel.countDocuments().exec();
+    const [posts, total] = await this.postRepository.findAndCount({
+      skip,
+      take: limit,
+    });
     return {
       data: posts,
       total,
@@ -25,17 +40,17 @@ export class PostRepository {
     };
   }
 
-  async getPostById(id: string): Promise<PostDocument | null> {
-    return this.postModel.findById(id).exec();
+  async getPostById(id: number): Promise<Post | null> {
+    return this.postRepository.findOne({ where: { id } });
   }
 
-  async getAllPostByUserId(UserId: string, skip: number, limit: number) {
-    const posts = await this.postModel
-      .find({ author: UserId })
-      .skip(skip)
-      .limit(limit)
-      .exec();
-    const total = await this.postModel.countDocuments().exec();
+  // Sửa phương thức lấy bài viết của người dùng theo userId
+  async getAllPostByUserId(userId: number, skip: number, limit: number) {
+    const [posts, total] = await this.postRepository.findAndCount({
+      where: { author: { id: userId } }, // Truy vấn bài viết của userId
+      skip,
+      take: limit,
+    });
     return {
       data: posts,
       total,
@@ -44,12 +59,13 @@ export class PostRepository {
     };
   }
 
-  async updatePostById(id: string, data: UpdatePostDto): Promise<PostDocument | null> {
-    return this.postModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  async updatePostById(id: number, data: UpdatePostDto): Promise<Post | null> {
+    await this.postRepository.update(id, data);
+    return this.postRepository.findOne({ where: { id } });
   }
-  
-  async deletePostById(id: string): Promise<boolean> {
-    const post = await this.postModel.findByIdAndDelete(id);
-    return post !== null;
+
+  async deletePostById(id: number): Promise<boolean> {
+    const result = await this.postRepository.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }

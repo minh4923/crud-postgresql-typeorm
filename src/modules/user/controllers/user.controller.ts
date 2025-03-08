@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, Delete, Body, Query, Request} from '@nestjs/common';
+import { Controller, Get, Param, Put, Delete, Body, Query, Request, ParseIntPipe } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { Auth } from '../../auth/guards/auth.decorator';
@@ -11,7 +11,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Auth('Admin') 
+  @Auth('admin')
   @ApiOperation({ summary: 'Get a list of all users' })
   @ApiQuery({ name: 'page', required: false, example: 1, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, example: 10, description: 'Number of users per page' })
@@ -21,33 +21,33 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth('admin') 
+  @Auth('admin')
   @ApiOperation({ summary: 'Get user information by ID' })
-  @ApiParam({ name: 'id', required: true, description: 'User ID' })
+  @ApiParam({ name: 'id', required: true, description: 'User ID', example: 1 })
   @ApiResponse({ status: 200, description: 'User information is returned' })
   @ApiResponse({ status: 404, description: 'User does not exist' })
-  async getUserById(@Param('id') id: string) {
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getUserById(id);
   }
 
   @Put(':id')
-  @Auth('admin ','user') 
+  @Auth('admin', 'user')
   @ApiOperation({ summary: 'Update user information' })
-  @ApiParam({ name: 'id', required: true, description: 'User ID' })
+  @ApiParam({ name: 'id', required: true, description: 'User ID', example: 1 })
   @ApiBody({ type: UpdateUserDto })
   @ApiResponse({ status: 200, description: 'User information is updated' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  async updateUserById(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
-    return this.userService.updateUserById(id, updateUserDto , req.user.id);  
+  async updateUserById(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto, @Request() req) {
+    return this.userService.updateUserById(id, updateUserDto, req.user.id);
   }
 
   @Delete(':id')
   @Auth('admin')
   @ApiOperation({ summary: 'Delete users by ID (Admin only)' })
-  @ApiParam({ name: 'id', required: true, description: 'User ID' })
+  @ApiParam({ name: 'id', required: true, description: 'User ID', example: 1 })
   @ApiResponse({ status: 200, description: 'User has been deleted' })
   @ApiResponse({ status: 403, description: 'No access' })
-  async deleteUserById(@Param('id') id: string) {
+  async deleteUserById(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUserById(id);
   }
 }
