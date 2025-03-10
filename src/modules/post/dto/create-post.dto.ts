@@ -1,5 +1,7 @@
 import { IsString, MinLength, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import sanitizeHtml  from 'sanitize-html';
+import { Transform } from 'class-transformer';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -10,6 +12,7 @@ export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(1)
+  @Transform(({ value }) => sanitizeHtml(value))
   title: string;
 
   @ApiProperty({
@@ -20,5 +23,6 @@ export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(1)
+  @Transform(({ value }) => sanitizeHtml(value))
   content: string;
 }

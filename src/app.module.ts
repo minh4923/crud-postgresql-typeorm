@@ -19,7 +19,7 @@ console.log('AppModule is loading jwtConfig:', jwtConfig);
       load: [jwtConfig],
     }),
 
-    // Cập nhật TypeORM cho PostgreSQL
+   
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -33,6 +33,6 @@ console.log('AppModule is loading jwtConfig:', jwtConfig);
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).forRoutes('*'); // Áp dụng JWT middleware
+    consumer.apply(JwtMiddleware).forRoutes('*'); 
   }
 }
